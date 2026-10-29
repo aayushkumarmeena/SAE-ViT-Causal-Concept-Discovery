@@ -1,0 +1,66 @@
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Main Web Application & API (FastAPI REST, SSE Streaming & React Studio)
+  # Accessible at: http://localhost:8000
+  # ----------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        TORCH_INDEX_URL: "https://download.pytorch.org/whl/cpu"
+    image: sae-vit-platform:latest
+    container_name: sae-vit-web
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./experiments:/app/experiments
+      - ./activations:/app/activations
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./config.py:/app/config.py
+      - ./app.py:/app/app.py
+      - ./api:/app/api
+      - ./static:/app/static
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEVICE=${DEVICE:-auto}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/system/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 25s
+
+  # ----------------------------------------------------------------------------
+  # 2. Companion Streamlit Dashboard (Classic Data Science View)
+  # Accessible at: http://localhost:8501
+  # (Reuses the built image from 'web' — avoids duplicate building and downloading)
+  # ----------------------------------------------------------------------------
+  dashboard:
+    image: sae-vit-platform:latest
+    container_name: sae-vit-dashboard
+    restart: unless-stopped
+    command: ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    ports:
+      - "${DASHBOARD_PORT:-8501}:8501"
+    volumes:
+      - ./experiments:/app/experiments
+      - ./activations:/app/activations
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./config.py:/app/config.py
+      - ./app.py:/app/app.py
+      - ./api:/app/api
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 25s
+    depends_on:
+      web:
+        condition: service_started

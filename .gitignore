@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+*.egg
+
+# Environment
+.env
+*.env.local
+
+# Node / Frontend
+frontend/node_modules/
+frontend/.cache/
+frontend/dist/
+
+# Large binary / data artifacts
+activations/store/selftest/
+activations/store/pytest_selftest
+data/raw/
+data/cifar-100-python/
+
+# Experiment checkpoints (large model weights — exclude only .pt files)
+experiments/*/*/checkpoint.pt
+experiments/*/__pycache__/
+
+# Pytest / IDE
+.pytest_cache/
+.DS_Store
+.idea/
+.vscode/
+
+# Docker
+.dockerenv
